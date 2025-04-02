@@ -124,11 +124,34 @@ def upload_to_box(path,name):
     #update file
         #https://github.com/box/box-python-sdk/blob/main/docs/usage/files.md#upload-a-new-version-of-a-file
     taq_folder_id=get_folder_id('taq')
-    client.folder(taq_folder_id).upload(file_path=path,file_name=name) 
+    #client.folder(taq_folder_id).upload(file_path=path,file_name=name) 
     
+    existing_files = client.folder(taq_folder_id).get_items()
+    existing_file = next((item for item in existing_files if item.name == name), None)
+
     #for  large uplaods
     #chunked_uploader=client.folder(taq_folder_id).get_chunked_uploader(path,name) 
     #uploaded_file = chunked_uploader.start()
+
+    # Determine file size
+    file_size = os.path.getsize(path)
+    if file_size >= 20_000_000:  # Use chunked upload for files >= 20MB
+        if existing_file:
+            # Update existing file using a chunked upload session
+            file_id = existing_file.id
+            upload_session = client.file(file_id).create_upload_session(file_size)
+        else:
+            # Create a new chunked uploader if the file does not exist
+            upload_session = client.folder(taq_folder_id).create_upload_session(file_size, name)
+
+        chunked_uploader = upload_session.get_chunked_uploader_for_path(path)
+        uploaded_file = chunked_uploader.start
+        
+    else:  # Use standard upload for smaller files
+        if existing_file:
+            uploaded_file = client.file(existing_file.id).update_contents(path)
+        else:
+            uploaded_file = client.folder(taq_folder_id).upload(file_path=path, file_name=name)
 
 
 def pull_data_off_box(periods_dict):

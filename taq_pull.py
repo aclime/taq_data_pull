@@ -9,7 +9,7 @@ db = wrds.Connection(wrds_host="wrds-pgdata.wharton.upenn.edu",
                      wrds_username=wrds_username,
                      wrds_password=wrds_password)
 
-def get_nbbo_tick_by_day(ticker,day):
+def get_nbbo_tick_by_day_old(ticker,day):
 
     nbbo_df=db.raw_sql(f"""
     SELECT
@@ -36,4 +36,18 @@ def get_nbbo_tick_by_day(ticker,day):
      """)
     return nbbo_df
          #   ,date_cols=['date'])
-    
+
+
+def get_nbbo_tick_by_day(ticker,day):
+
+    nbbo_df=db.raw_sql(f"""
+    SELECT
+        *
+    FROM
+        taqm_2022.complete_nbbo_2022
+    WHERE
+        sym_root = '{ticker}' AND
+        date = '{day}' AND
+        EXTRACT (HOUR FROM time_m) = 9
+     """)
+    return nbbo_df

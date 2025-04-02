@@ -6,6 +6,9 @@ from flask import Flask, redirect, request
 from boxsdk import OAuth2, Client
 from box_creds import client_id, client_secret  # Your Box credentials
 
+import pandas as pd
+from io import StringIO
+
 TOKEN_FILE = "box_tokens.json"
 CLIENT_ID = client_id
 CLIENT_SECRET = client_secret
@@ -146,7 +149,7 @@ def upload_to_box(path,name):
 
         chunked_uploader = upload_session.get_chunked_uploader_for_path(path)
         uploaded_file = chunked_uploader.start
-        
+
     else:  # Use standard upload for smaller files
         if existing_file:
             uploaded_file = client.file(existing_file.id).update_contents(path)
@@ -155,7 +158,7 @@ def upload_to_box(path,name):
 
 
 def pull_data_off_box(periods_dict):
-    client=make_client()
+    #client=make_client()
     om_folder_srch=client.search().query(query='OptionMetrics', type='folder')
     om_folder_id=[item.id for item in om_folder_srch][0]
     res=client.folder(om_folder_id).get_items(limit=None)
